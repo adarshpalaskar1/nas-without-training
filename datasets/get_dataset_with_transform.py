@@ -174,6 +174,15 @@ def get_datasets(name, root, cutout):
     train_data = dset.CIFAR10 (root, train=True , transform=train_transform, download=True)
     test_data  = dset.CIFAR10 (root, train=False, transform=test_transform , download=True)
     assert len(train_data) == 50000 and len(test_data) == 10000
+
+## Adding custom dataset SVHN:
+
+  elif name == 'SVHN':
+    train_data = dset.SVHN (root, train=True , transform=train_transform, download=True)
+    test_data  = dset.SVHN (root, train=False, transform=test_transform , download=True)
+    assert len(train_data) == 50000 and len(test_data) == 10000
+##
+
   elif name == 'cifar100':
     train_data = dset.CIFAR100(root, train=True , transform=train_transform, download=True)
     test_data  = dset.CIFAR100(root, train=False, transform=test_transform , download=True)
@@ -210,12 +219,13 @@ def get_datasets(name, root, cutout):
   return train_data, test_data, xshape, class_num
 
 
+## Data loader for NAS-Bench-201 search space and adding custom dataset SVHN
 def get_nas_search_loaders(train_data, valid_data, dataset, config_root, batch_size, workers):
   if isinstance(batch_size, (list,tuple)):
     batch, test_batch = batch_size
   else:
     batch, test_batch = batch_size, batch_size
-  if dataset == 'cifar10':
+  if dataset == 'cifar10' or dataset == 'SVHN':                                    ## Adding custom dataset SVHN
     #split_Fpath = 'configs/nas-benchmark/cifar-split.txt'
     cifar_split = load_config('{:}/cifar-split.txt'.format(config_root), None, None)
     train_split, valid_split = cifar_split.train, cifar_split.valid # search over the proposed training and validation set
@@ -230,6 +240,7 @@ def get_nas_search_loaders(train_data, valid_data, dataset, config_root, batch_s
     search_loader = torch.utils.data.DataLoader(search_data, batch_size=batch, shuffle=True , num_workers=workers, pin_memory=True)
     train_loader  = torch.utils.data.DataLoader(train_data , batch_size=batch, sampler=torch.utils.data.sampler.SubsetRandomSampler(train_split), num_workers=workers, pin_memory=True)
     valid_loader  = torch.utils.data.DataLoader(xvalid_data, batch_size=test_batch, sampler=torch.utils.data.sampler.SubsetRandomSampler(valid_split), num_workers=workers, pin_memory=True)
+  
   elif dataset == 'cifar100':
     cifar100_test_split = load_config('{:}/cifar100-test-split.txt'.format(config_root), None, None)
     search_train_data = train_data
